@@ -36,3 +36,4 @@ docker-compose -f docker-compose.db.yml up -d
 
 This command starts the AttendEase API in development mode.
 
+### 4. Application is ready! 🚀
