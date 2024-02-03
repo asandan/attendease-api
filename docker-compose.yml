@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  api:
+    working_dir: /usr/src/app
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: attendease-api
+    restart: always
+    ports:
+      - '3333:3333'
+    command: node dist/src/main.js
+    networks:
+      - attendease-network
+networks:
+  attendease-network:
+    external: true
