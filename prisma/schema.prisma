@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id Int @id @default(autoincrement())
+  name String @unique
+
+  users User[]
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  email String @unique
+  username String @unique
+  password String
+  name String
+  surname String
+
+  roleId Int
+  groupId Int
+
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+}
+
+model Room {
+  id Int @id @default(autoincrement())
+  roomNumber Int @unique
+}
+
+model Faculty {
+  id Int @id @default(autoincrement())
+  name String @unique
+
+  EPs EP[]
+}
+
+model EP {
+  id Int @id @default(autoincrement())
+  name String @unique
+  facultyId Int
+
+  faculty Faculty @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+
+  subjects SubjectsOnEP[]
+  groups Group[]
+}
+
+model Subject {
+  id Int @id @default(autoincrement())
+  name String @unique
+
+  EPs SubjectsOnEP[]
+}
+
+model SubjectsOnEP {
+  subjectId Int 
+  EPId Int  
+  subject Subject @relation(fields: [subjectId], references: [id])
+  ep EP @relation(fields: [EPId], references: [id])
+
+  @@id([subjectId, EPId])
+}
+
+model Group {
+  id Int @id @default(autoincrement())
+  name String @unique
+  EPId Int
+
+  users User[]
+  ep EP @relation(fields: [EPId], references: [id])
+}
