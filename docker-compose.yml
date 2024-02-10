@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: production
-    container_name: attendease-api
+    container_name: attendease
     restart: always
     ports:
       - '3333:3333'

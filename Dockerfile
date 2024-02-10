@@ -2,6 +2,8 @@ FROM node:18-alpine As development
 
 RUN apk update
 
+RUN npm install -g @nestjs/cli
+
 WORKDIR /usr/src/app
 
 RUN chown -R node:node /usr/src/app
@@ -14,6 +16,7 @@ COPY --chown=node:node . .
 RUN npx prisma generate
 
 USER node
+
 
 
 FROM node:18-alpine As build
