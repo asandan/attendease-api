@@ -7,33 +7,14 @@ This guide will help you set up and run the AttendEase application along with it
 
 ## Instructions
 
-### 1. Network setup
+### 1. Project setup
 
-Run the following command to create attendease Docker network.
-
-```bash
-docker network create attendease-network
-```
-
-### 2. Database Setup
-
-Run the following command to start the database in detached mode:
+Run the following project containers
 
 ```bash
-docker-compose -f docker-compose.db.yml up -d
+docker-compose -f docker-compose.yml up -d
 ```
 
-This command launches the PostgreSQL database for AttendEase.
+This command will run Database and API server
 
-### 3. Application Setup
-
-Run the following command to start the AttendEase application:
-
-
-```bash
-docker-compose -f docker-compose.db.yml up -d
-```
-
-This command starts the AttendEase API in development mode.
-
-### 4. Application is ready! 🚀
+### Application is ready! 🚀
