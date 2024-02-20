@@ -15,7 +15,7 @@ CREATE TABLE "User" (
     "name" TEXT NOT NULL,
     "surname" TEXT NOT NULL,
     "roleId" INTEGER NOT NULL,
-    "groupId" INTEGER NOT NULL,
+    "groupId" INTEGER,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
