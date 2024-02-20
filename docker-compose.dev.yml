@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  api:
+    user: root
+    working_dir: /usr/src/app
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: attendease-api
+    restart: always
+    ports:
+      - '3333:3333'
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npm run start:dev
+    networks:
+      - attendease-backend_attendease-network
+networks:
+  attendease-backend_attendease-network:
+    external: true
