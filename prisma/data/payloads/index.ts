@@ -1,4 +1,3 @@
-import { EP, Faculty } from '@prisma/client';
 
 export const groupItems = [
   {
@@ -34,7 +33,6 @@ export const userItems = [
   {
     name: 'Alice',
     surname: 'Smith',
-    username: 'alice',
     email: 'alice.smith@gmail.com',
     password: '123',
     roleId: 1,
@@ -43,7 +41,6 @@ export const userItems = [
   {
     name: 'John',
     surname: 'Doe',
-    username: 'john',
     email: 'john.doe@gmail.com',
     password: 'qwe',
     roleId: 2,
