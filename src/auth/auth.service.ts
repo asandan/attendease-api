@@ -3,45 +3,36 @@ import { AuthDto } from './dto';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { User } from '@prisma/client';
 
-interface UserPayload {
-  email: string;
-  password: string;
-  username: string;
-  name: string;
-  surname: string;
-  roleId: number;
-  groupId?: number;
-}
+
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async signup(dto: AuthDto) {
     const {
       email,
       password: _password,
-      username,
       name,
       surname,
       roleId,
-      groupId: _groupId,
+      groupId
     } = dto;
 
     const password = await bcrypt.hash(_password, 10);
 
-    const payload: UserPayload = {
+    const payload = {
       email,
       password,
-      username,
       name,
       surname,
       roleId,
-    };
+    } as User;
 
-    if (_groupId) {
-      payload.groupId = _groupId;
+    if (groupId) {
+      payload.groupId = groupId;
     }
 
     try {
@@ -59,29 +50,24 @@ export class AuthService {
   }
 
   async signin(dto: AuthDto) {
-    const { email, password, username } = dto;
+    const { email, password } = dto;
 
-    const userByName = await this.prisma.user.findUnique({
-      where: {
-        username,
-      },
-    });
-
-    const userByEmail = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: {
         email,
       },
     });
 
-    const user = userByName || userByEmail;
-
     if (!user) {
       throw new ForbiddenException("User doesn't exist");
     }
+
     const match = await bcrypt.compare(password, user.password);
+
     if (!match) {
       throw new ForbiddenException('Invalid credentials');
     }
+
     return user;
   }
 }

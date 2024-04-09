@@ -12,15 +12,9 @@ import {
     email: string;
   
     @IsString()
-    @IsNotEmpty()
-    username: string;
-  
-    @IsEmail()
-    @IsNotEmpty()
     name: string;
 
-    @IsEmail()
-    @IsNotEmpty()
+    @IsString()
     surname: string;
 
     @IsString()
