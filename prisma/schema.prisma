@@ -29,6 +29,8 @@ model User {
 
   role  Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
   group Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  AttendanceSnapshots AttendanceSnapshot[]
 }
 
 model Faculty {
@@ -52,29 +54,18 @@ model Subject {
   id   Int    @id @default(autoincrement())
   name String @unique
 
-  Schedules Schedule[]
+  attendanceSnapshot AttendanceSnapshot?
 
-  ScheduleSubject ScheduleSubject[]
+  schedules Schedule[]
 }
 
 model Schedule {
-  id   Int    @id @default(autoincrement())
-  day  String
-  time String
+  id  Int      @id @default(autoincrement())
+  day DateTime
 
   groupId Int
 
-  Subjects        Subject[]
-  ScheduleSubject ScheduleSubject[]
-}
-
-model ScheduleSubject {
-  id         Int @id @default(autoincrement())
-  scheduleId Int
-  subjectId  Int
-
-  schedule Schedule @relation(fields: [scheduleId], references: [id])
-  subject  Subject  @relation(fields: [subjectId], references: [id])
+  subjects Subject[]
 }
 
 model Group {
@@ -85,4 +76,17 @@ model Group {
   users User[]
 
   ep EP @relation(fields: [EPId], references: [id])
+}
+
+model AttendanceSnapshot {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  userId    Int
+  subjectId Int @unique
+
+  subject Subject @relation(fields: [subjectId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([userId, subjectId, createdAt])
 }
