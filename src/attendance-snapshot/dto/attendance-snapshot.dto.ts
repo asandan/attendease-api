@@ -2,16 +2,6 @@ import { Transform } from "class-transformer";
 import { IsDateString, IsNotEmpty } from "class-validator";
 
 
-export class GetAttendanceSnapsotsDto {
-  @IsDateString()
-  @IsNotEmpty()
-  startDate: string;
-
-  @IsNotEmpty()
-  @Transform(({ value }) => parseInt(value))
-  userId: number;
-}
-
 export class CreateAttendanceSnapshotDto {
   @IsNotEmpty()
   @Transform(({ value }) => parseInt(value))
@@ -23,9 +13,9 @@ export class CreateAttendanceSnapshotDto {
 }
 
 export class GetWeekAttendanceSnapshotDto {
-  @IsDateString()
   @IsNotEmpty()
-  startDate: Date;
+  @Transform(({ value }) => parseInt(value))
+  currentWeek: number;
 
   @IsNotEmpty()
   @Transform(({ value }) => parseInt(value))

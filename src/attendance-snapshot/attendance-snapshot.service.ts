@@ -1,142 +1,177 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
-import { CreateAttendanceSnapshotDto, GetAttendanceSnapsotsDto, GetWeekAttendanceSnapshotDto } from "./dto";
-import { getFormattedDate } from "src/util";
+import { CreateAttendanceSnapshotDto, GetWeekAttendanceSnapshotDto } from "./dto";
+import { getFullWeekDay, getWeeksPassed } from "src/util";
 
 @Injectable({})
 export class AttendanceSnapshotService {
   constructor(private readonly prismaService: PrismaService) { }
 
-  async getAllAttendanceSnapshots(data: GetAttendanceSnapsotsDto) {
+  async getAllAttendanceSnapshots() {
     try {
-      return await this.prismaService.attendanceSnapshot.findMany({
-        where: {
-          ...data
-        }
-      })
+      return await this.prismaService.attendanceSnapshot.findMany();
     } catch (e) {
-      throw new BadRequestException(e.message);
+      throw new BadRequestException(e);
     }
   }
 
   async getWeekAttendanceSnapshots(data: GetWeekAttendanceSnapshotDto) {
+    const { userId, currentWeek } = data;
     try {
-
-      const { startDate, userId } = data
-
       const user = await this.prismaService.user.findUnique({
         where: {
           id: userId
         }
-      })
+      });
 
-      if (!user) throw new BadRequestException('User not found')
-
-      let futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + 7);
+      if (!user) throw new BadRequestException('User not found');
 
 
-      const attendanceSnapshotsWeek = await this.prismaService.attendanceSnapshot.findMany({
+      const attendanceSnapshots = await this.prismaService.attendanceSnapshot.findMany({
         where: {
           userId,
-          createdAt: {
-            gte: startDate,
-            lte: futureDate
-          }
-        },
-        include: {
-          subject: true,
-        }
-      })
-
-      const scheduleForWeek = await this.prismaService.schedule.findMany({
-        where: {
-          groupId: user.groupId,
-          day: {
-            gte: startDate,
-            lte: futureDate
+          week: {
+            number: currentWeek
           }
         },
         select: {
-          subjects: {
-            select: {
-              name: true,
-
-            }
-          },
-          day: true
+          subject: true,
+          day: true,
         }
       })
 
-      const attendanceRecords = scheduleForWeek.reduce((acc, schedule) => {
-        const { day } = schedule;
+      const schedule = await this.prismaService.schedule.findFirst({
+        where: {
+          groupId: user.groupId,
+        }
+      })
 
-        const date = new Date(day).toLocaleDateString("ru-RU");
-        const formattedDate = getFormattedDate(date);
-
-        acc[formattedDate] = {};
-
-        schedule.subjects.forEach(subject => {
-          if (!acc[formattedDate][subject.name]) {
-            acc[formattedDate][subject.name] = 1
-          } else {
-            acc[formattedDate][subject.name]++
+      const currentWeekSnapshot = await this.prismaService.week.findFirstOrThrow({
+        where: {
+          number: currentWeek,
+          scheduleId: schedule.id
+        },
+        select: {
+          days: {
+            select: {
+              name: true,
+              subjects: {
+                select: {
+                  subject: true,
+                }
+              }
+            }
           }
-        })
+        }
+      });
+
+      const totalSubjectsForWeek = currentWeekSnapshot.days.reduce((acc, { name, subjects }) => {
+        if (!acc[name]) {
+          acc[name] = {}
+        } else {
+          acc[name] = subjects.reduce((acc, { subject: { name: subjectName } }) => {
+            if (!acc[name][subjectName]) {
+              acc[name][subjectName] = 1;
+            } else {
+              acc[name][subjectName] += 1;
+            }
+            return acc
+          }, {})
+        }
         return acc
       }, {})
 
-      return attendanceSnapshotsWeek.reduce((acc, snapshot) => {
-        const { subject: { name }, createdAt } = snapshot;
+      return attendanceSnapshots.reduce((acc, { day: dayName, subject: { name: subjectName } }) => {
+        const dayIdx = acc.findIndex(({ day }) => day === dayName);
 
-        const date = new Date(createdAt).toLocaleDateString("ru-RU");
-        const formattedDate = getFormattedDate(date);
-        const formattedDataIdx = acc.findIndex(data => data.subjectName === name);
-
-        if (formattedDataIdx === -1) {
+        if (dayIdx === -1) {
           acc.push({
-            subjectName: name,
-            [formattedDate]: { attended: 0, total: attendanceRecords[formattedDate][name] },
-          });
+            day: dayName,
+            subjects: {
+              [subjectName]: { attended: 0, total: totalSubjectsForWeek[dayName][subjectName] }
+            }
+          })
         } else {
-          acc[formattedDataIdx][formattedDate]['attended']++;
+          acc[dayIdx].subjects[subjectName].attended += 1;
         }
 
         return acc;
       }, []).map(el => {
-        const dateKey = Object.keys(el)[1];
-        const ratio = el[dateKey].attended / el[dateKey].total;
+        const subjectKeys = Object.keys(el.subjects);
+
+        const subjectRatios = subjectKeys.map(subject => {
+          return { [subject]: { ratio: el.subjects[subject].attended / el.subjects[subject].total } }
+        })
+
         return {
-          ...el,
-          [dateKey]: ratio
+          day: el.day,
+          ...subjectRatios
         }
       })
-
     } catch (e) {
-      throw new BadRequestException(e.message);
+      throw new BadRequestException(e);
     }
-
   }
 
-  async createAttendanceSnapshot(data: CreateAttendanceSnapshotDto) {
+  async createSnapshot(data: CreateAttendanceSnapshotDto) {
     try {
+      const { userId } = data;
 
-      const user = await this.prismaService.user.findUnique({
+      const today = new Date();
+      const currentHour = today.getHours();
+      const currentMinute = today.getMinutes();
+      const currentDay = getFullWeekDay(today.getDay());
+      const currentWeek = getWeeksPassed(new Date("January 23, 2024"))
+
+      if (currentHour > 18 || currentHour < 8) {
+        throw new BadRequestException("Cannot create attendance snapshot")
+      }
+
+      if (currentMinute > 10) {
+        throw new BadRequestException("User has been late for class")
+      }
+
+      const time = `${currentHour}:00`
+
+      if (!currentDay) {
+        throw new BadRequestException("Today's Sunday")
+      }
+
+      const { id: weekId } = await this.prismaService.week.findFirst({
         where: {
-          id: data.userId
+          number: currentWeek,
+        },
+        select: {
+          id: true,
         }
       })
-      const subject = await this.prismaService.subject.findUnique({
+
+      const { subject: { id: subjectId } } = await this.prismaService.daySubject.findFirst({
         where: {
-          id: data.subjectId
+          startTime: time
+        },
+        select: {
+          subject: {
+            select: {
+              id: true,
+            }
+          }
         }
       })
 
-      if (!user || !subject) throw new Error('User or subject not found')
+      const payload = {
+        day: currentDay,
+        time,
+        weekId,
+        subjectId,
+        userId,
+      }
 
-      return await this.prismaService.attendanceSnapshot.create({ data })
+      return await this.prismaService.attendanceSnapshot.create({
+        data: payload
+      })
     } catch (e) {
-      throw new BadRequestException(e.message);
+      throw new BadRequestException(e)
     }
   }
 }
