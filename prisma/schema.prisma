@@ -10,6 +10,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum WeekDays {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+}
+
 model Role {
   id   Int    @id @default(autoincrement())
   name String @unique
@@ -50,22 +59,53 @@ model EP {
   groups Group[]
 }
 
-model Subject {
-  id   Int    @id @default(autoincrement())
-  name String @unique
+model Schedule {
+  id    Int    @id @default(autoincrement())
+  groupId Int @unique
 
-  attendanceSnapshot AttendanceSnapshot?
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
-  schedules Schedule[]
+  weeks Week[]
 }
 
-model Schedule {
-  id  Int      @id @default(autoincrement())
-  day DateTime
+model Week {
+  id         Int @id @default(autoincrement())
+  scheduleId Int
+  number     Int
 
-  groupId Int
+  schedule Schedule @relation(fields: [scheduleId], references: [id])
 
-  subjects Subject[]
+  days               Day[]
+  attendanceSnapshots AttendanceSnapshot[]
+}
+
+model Day {
+  id     Int      @id @default(autoincrement())
+  name   WeekDays
+  weekId Int
+
+  week Week @relation(fields: [weekId], references: [id])
+
+  subjects DaySubject[]
+}
+
+model Subject {
+  id   Int    @id @default(autoincrement())
+  name String
+  
+  days DaySubject[]
+
+  attendanceSnapshots AttendanceSnapshot[]
+}
+
+model DaySubject {
+  id          Int      @id @default(autoincrement())
+  dayId       Int
+  subjectId   Int
+  startTime   String
+ 
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+  day         Day      @relation(fields: [dayId], references: [id])
 }
 
 model Group {
@@ -74,19 +114,22 @@ model Group {
   EPId Int
 
   users User[]
+  schedule Schedule?
 
   ep EP @relation(fields: [EPId], references: [id])
 }
 
 model AttendanceSnapshot {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
+  id Int @id @default(autoincrement())
 
-  userId    Int
-  subjectId Int @unique
+  day   WeekDays
+  time String
 
+  weekId Int
+  subjectId Int
+  userId Int
+
+  week Week @relation(fields: [weekId], references: [id])
   subject Subject @relation(fields: [subjectId], references: [id])
-  user    User    @relation(fields: [userId], references: [id])
-
-  @@unique([userId, subjectId, createdAt])
+  user   User @relation(fields: [userId], references: [id])
 }

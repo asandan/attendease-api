@@ -9,7 +9,7 @@ const globalPrefix = 'api';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix(globalPrefix);
-  app.use(new BasicAuthMiddleware().use);
+  // app.use(new BasicAuthMiddleware().use);
   app.enableCors()
   await app.listen(port);
   Logger.log(
