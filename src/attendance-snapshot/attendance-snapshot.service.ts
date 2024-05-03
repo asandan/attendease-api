@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateAttendanceSnapshotDto, GetWeekAttendanceSnapshotDto } from "./dto";
-import { getFullWeekDay, getWeeksPassed } from "src/util";
+import { TotalSubjectsForWeekEntry, getFullWeekDay, getWeeksPassed } from "src/util";
 
 @Injectable({})
 export class AttendanceSnapshotService {
@@ -31,7 +31,7 @@ export class AttendanceSnapshotService {
         where: {
           userId,
           week: {
-            number: currentWeek
+            id: currentWeek
           }
         },
         select: {
@@ -65,49 +65,29 @@ export class AttendanceSnapshotService {
         }
       });
 
-      const totalSubjectsForWeek = currentWeekSnapshot.days.reduce((acc, { name, subjects }) => {
-        if (!acc[name]) {
-          acc[name] = {}
-        } else {
-          acc[name] = subjects.reduce((acc, { subject: { name: subjectName } }) => {
-            if (!acc[name][subjectName]) {
-              acc[name][subjectName] = 1;
-            } else {
-              acc[name][subjectName] += 1;
-            }
-            return acc
-          }, {})
+      const totalSubjectsForWeekEntry: TotalSubjectsForWeekEntry[] = currentWeekSnapshot.days.map(({ name, subjects }) => {
+        const subjectsMap = subjects.reduce((acc, { subject: { name: subjectName } }) => {
+          acc[subjectName] = { attended: 0, total: (acc[subjectName]?.total || 0) + 1 };
+          return acc;
+        }, {} as { [subjectName: string]: { attended: number; total: number } });
+
+        return { day: name, subjects: subjectsMap };
+      });
+
+      attendanceSnapshots.forEach(({ day: dayName, subject: { name: subjectName } }) => {
+        const entry = totalSubjectsForWeekEntry.find(entry => entry.day === dayName);
+        if (entry && entry.subjects[subjectName]) {
+          entry.subjects[subjectName].attended++;
         }
-        return acc
-      }, {})
+      });
 
-      return attendanceSnapshots.reduce((acc, { day: dayName, subject: { name: subjectName } }) => {
-        const dayIdx = acc.findIndex(({ day }) => day === dayName);
+      return totalSubjectsForWeekEntry.map(entry => {
+        const subjects = Object.fromEntries(Object.entries(entry.subjects).map(([subjectName, { attended, total }]) => {
+          return [subjectName, attended / total];
+        }));
+        return { day: entry.day, ...subjects };
+      });
 
-        if (dayIdx === -1) {
-          acc.push({
-            day: dayName,
-            subjects: {
-              [subjectName]: { attended: 0, total: totalSubjectsForWeek[dayName][subjectName] }
-            }
-          })
-        } else {
-          acc[dayIdx].subjects[subjectName].attended += 1;
-        }
-
-        return acc;
-      }, []).map(el => {
-        const subjectKeys = Object.keys(el.subjects);
-
-        const subjectRatios = subjectKeys.map(subject => {
-          return { [subject]: { ratio: el.subjects[subject].attended / el.subjects[subject].total } }
-        })
-
-        return {
-          day: el.day,
-          ...subjectRatios
-        }
-      })
     } catch (e) {
       throw new BadRequestException(e);
     }
