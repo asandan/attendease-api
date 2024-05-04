@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateAttendanceSnapshotDto, GetWeekAttendanceSnapshotDto } from "./dto";
-import { TotalSubjectsForWeekEntry, getFullWeekDay, getWeeksPassed } from "src/util";
+import { getFullWeekDay, getWeeksPassed } from "src/util";
 
 @Injectable({})
 export class AttendanceSnapshotService {
@@ -65,29 +65,36 @@ export class AttendanceSnapshotService {
         }
       });
 
-      const totalSubjectsForWeekEntry: TotalSubjectsForWeekEntry[] = currentWeekSnapshot.days.map(({ name, subjects }) => {
-        const subjectsMap = subjects.reduce((acc, { subject: { name: subjectName } }) => {
-          acc[subjectName] = { attended: 0, total: (acc[subjectName]?.total || 0) + 1 };
-          return acc;
-        }, {} as { [subjectName: string]: { attended: number; total: number } });
+      const attendanceData: { [subject: string]: { [day: string]: number } } = {};
 
-        return { day: name, subjects: subjectsMap };
+      currentWeekSnapshot.days.forEach(({ name, subjects }) => {
+        subjects.forEach(({ subject: { name: subjectName } }) => {
+          if (!attendanceData[subjectName]) {
+            attendanceData[subjectName] = {};
+          }
+          attendanceData[subjectName][name] = 0;
+        });
       });
 
       attendanceSnapshots.forEach(({ day: dayName, subject: { name: subjectName } }) => {
-        const entry = totalSubjectsForWeekEntry.find(entry => entry.day === dayName);
-        if (entry && entry.subjects[subjectName]) {
-          entry.subjects[subjectName].attended++;
+        if (attendanceData[subjectName] && attendanceData[subjectName][dayName] !== undefined) {
+          attendanceData[subjectName][dayName] += 1;
         }
       });
 
-      return totalSubjectsForWeekEntry.map(entry => {
-        const subjects = Object.fromEntries(Object.entries(entry.subjects).map(([subjectName, { attended, total }]) => {
-          return [subjectName, attended / total];
-        }));
-        return { day: entry.day, ...subjects };
+      const attendancePercentages = Object.entries(attendanceData).map(([subject, attendance]) => {
+        const subjectAttendance = {
+          subject,
+        };
+        Object.entries(attendance).forEach(([day, attended]) => {
+          const totalSubjectsOnDay = currentWeekSnapshot.days.filter(d => d.name === day)[0]?.subjects.filter(s => s.subject.name === subject).length || 0;
+          console.log(totalSubjectsOnDay, attended)
+          subjectAttendance[day] = totalSubjectsOnDay !== 0 ? attended / totalSubjectsOnDay : 0;
+        });
+        return subjectAttendance;
       });
 
+      return attendancePercentages;
     } catch (e) {
       throw new BadRequestException(e);
     }

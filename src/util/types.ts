@@ -23,7 +23,3 @@ export type Months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "J
 //   }
 // }
 
-export type TotalSubjectsForWeekEntry = {
-  day: string;
-  subjects: { [subjectName: string]: { attended: number; total: number } };
-}
