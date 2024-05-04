@@ -5,8 +5,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { User } from '@prisma/client';
 
-
-
 @Injectable()
 export class AuthService {
   constructor(private readonly prisma: PrismaService) { }
