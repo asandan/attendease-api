@@ -1,54 +1,54 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { AuthService } from '../src/auth/auth.service';
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
+import { AuthController } from '../src/auth/auth.controller';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { AuthDto } from '../src/auth/dto';
+import { PrismaModule } from '../src/prisma/prisma.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
-describe('AuthService', () => {
-  let service: AuthService;
+describe('AuthController', () => {
+  let controller: AuthController;
+  let authService: AuthService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [AuthService, PrismaService], 
+      imports: [PrismaModule, ConfigModule],
+      controllers: [AuthController],
+      providers: [AuthService, PrismaService, ConfigService],
     }).compile();
-  
-    service = module.get<AuthService>(AuthService);
+
+    controller = module.get<AuthController>(AuthController);
+    authService = module.get<AuthService>(AuthService);
   });
 
   describe('signup', () => {
-   it('will create a user', async() =>{
-    const dto = {
-      id: 1,
-      email: 'user@example.com',
-      password: 'password',
-      name: 'John',
-      surname: 'Doe',
-      roleId: 1, 
-      groupId: 1
-    }
-    jest.spyOn(service['prisma'].user, 'create').mockResolvedValue(dto);
-    
-    const result = await service.signup(dto);
-        expect(result.email).toEqual(dto.email);
-        expect(result.id).toEqual(dto.id);
-        expect(result.name).toEqual(dto.name);
-        expect(result.surname).toEqual(dto.surname);
-        expect(result.roleId).toEqual(dto.roleId);
-        expect(result.groupId).toEqual(dto.groupId);
-   });
+    it('should successfully create a new user', async () => {
+      const mockedData: AuthDto = {
+        email: 'test@example.com',
+        password: 'password',
+        name: 'John',
+        surname: 'Doe',
+        roleId: 1,
+        groupId: 1,
+      };
 
-it(' will check if user is already exist', async ()=> {
-  const dto = {
-    id: 1,
-    email: 'user@example.com',
-    password: 'password',
-    name: 'John',
-    surname: 'Doe',
-    roleId: 1, 
-    groupId: 1
-  }
-  jest.spyOn(service['prisma'].user, 'findUnique').mockResolvedValue(dto);
-  const result = await service.signup(dto);
-  expect(result.email).toEqual(dto.email);
-});
-});
+      const mockedHashedPassword = await bcrypt.hash(mockedData.password, 10);
+
+      const mockedCreatedUser = {
+        ...mockedData,
+        password: mockedHashedPassword, // Include the hashed password in the created user object
+        id: 1, // Mocked user ID
+      };
+
+      jest
+        .spyOn(authService, 'signup')
+        .mockResolvedValueOnce(mockedCreatedUser);
+
+      const result = await controller.signup(mockedData);
+
+      expect(result).toEqual(mockedCreatedUser);
+    });
+  });
 });
