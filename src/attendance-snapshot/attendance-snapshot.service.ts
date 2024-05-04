@@ -31,7 +31,7 @@ export class AttendanceSnapshotService {
         where: {
           userId,
           week: {
-            number: currentWeek
+            id: currentWeek
           }
         },
         select: {
@@ -65,49 +65,36 @@ export class AttendanceSnapshotService {
         }
       });
 
-      const totalSubjectsForWeek = currentWeekSnapshot.days.reduce((acc, { name, subjects }) => {
-        if (!acc[name]) {
-          acc[name] = {}
-        } else {
-          acc[name] = subjects.reduce((acc, { subject: { name: subjectName } }) => {
-            if (!acc[name][subjectName]) {
-              acc[name][subjectName] = 1;
-            } else {
-              acc[name][subjectName] += 1;
-            }
-            return acc
-          }, {})
+      const attendanceData: { [subject: string]: { [day: string]: number } } = {};
+
+      currentWeekSnapshot.days.forEach(({ name, subjects }) => {
+        subjects.forEach(({ subject: { name: subjectName } }) => {
+          if (!attendanceData[subjectName]) {
+            attendanceData[subjectName] = {};
+          }
+          attendanceData[subjectName][name] = 0;
+        });
+      });
+
+      attendanceSnapshots.forEach(({ day: dayName, subject: { name: subjectName } }) => {
+        if (attendanceData[subjectName] && attendanceData[subjectName][dayName] !== undefined) {
+          attendanceData[subjectName][dayName] += 1;
         }
-        return acc
-      }, {})
+      });
 
-      return attendanceSnapshots.reduce((acc, { day: dayName, subject: { name: subjectName } }) => {
-        const dayIdx = acc.findIndex(({ day }) => day === dayName);
+      const attendancePercentages = Object.entries(attendanceData).map(([subject, attendance]) => {
+        const subjectAttendance = {
+          subject,
+        };
+        Object.entries(attendance).forEach(([day, attended]) => {
+          const totalSubjectsOnDay = currentWeekSnapshot.days.filter(d => d.name === day)[0]?.subjects.filter(s => s.subject.name === subject).length || 0;
+          console.log(totalSubjectsOnDay, attended)
+          subjectAttendance[day] = totalSubjectsOnDay !== 0 ? attended / totalSubjectsOnDay : 0;
+        });
+        return subjectAttendance;
+      });
 
-        if (dayIdx === -1) {
-          acc.push({
-            day: dayName,
-            subjects: {
-              [subjectName]: { attended: 0, total: totalSubjectsForWeek[dayName][subjectName] }
-            }
-          })
-        } else {
-          acc[dayIdx].subjects[subjectName].attended += 1;
-        }
-
-        return acc;
-      }, []).map(el => {
-        const subjectKeys = Object.keys(el.subjects);
-
-        const subjectRatios = subjectKeys.map(subject => {
-          return { [subject]: { ratio: el.subjects[subject].attended / el.subjects[subject].total } }
-        })
-
-        return {
-          day: el.day,
-          ...subjectRatios
-        }
-      })
+      return attendancePercentages;
     } catch (e) {
       throw new BadRequestException(e);
     }
