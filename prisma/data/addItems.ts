@@ -19,7 +19,7 @@ export type PrismaModel =
     >
   | 'ep';
 
-export type Payload<Z> = Omit<Z, 'id'>[];
+export type Payload<Z> = Omit<Z, "id" | "createdAt" | "updatedAt">[];
 
 /**
  * 
