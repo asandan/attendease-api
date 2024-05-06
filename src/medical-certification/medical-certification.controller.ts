@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 @Controller("medical-certification")
 export class MedicalCertificationController {
   constructor(private readonly medicalCertificationService: MedicalCertificationService) { }
-
+ 
   @Get("/:userId")
   async getUsersMedicalCertifications(@Param("userId", ParseIntPipe) userId: number, @Query("status") status: Status) {
     try {
