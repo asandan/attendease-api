@@ -1,9 +1,9 @@
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
-import { AuthDto } from './dto';
 import * as bcrypt from 'bcrypt';
-import { PrismaService } from '../prisma/prisma.service';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { PrismaService } from '../prisma/prisma.service';
+import { AuthDto } from './dto';
 
 @Injectable()
 export class AuthService {
@@ -12,22 +12,16 @@ export class AuthService {
   async signup(dto: AuthDto) {
     try {
       const {
-        email,
         password: _password,
-        name,
-        surname,
-        roleId,
-        groupId
+        groupId,
+        ...restDto
       } = dto;
 
       const password = await bcrypt.hash(_password, 10);
 
       const payload = {
-        email,
         password,
-        name,
-        surname,
-        roleId,
+        ...restDto
       } as User;
 
       if (groupId) {
