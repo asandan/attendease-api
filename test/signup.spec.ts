@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { AuthService } from '../src/auth/auth.service';
 import * as bcrypt from 'bcrypt';
 import { AuthController } from '../src/auth/auth.controller';
@@ -87,7 +86,7 @@ describe('AuthController', () => {
           };
         
           // Attempt to sign in with the non-existent user
-          await expect(authService.signin(dto)).rejects.toThrowError("ForbiddenException: User doesn't exist");
+          await expect(authService.signin(dto)).rejects.toThrow("User doesn't exist");
         });
         it("should throw a ForbiddenException if the invalid credentials", async () => {
           const dto: AuthDto = {
@@ -100,7 +99,7 @@ describe('AuthController', () => {
           };
         
           // Attempt to sign in with the non-existent user
-          await expect(authService.signin(dto)).rejects.toThrowError("ForbiddenException: Invalid credentials");
+          await expect(authService.signin(dto)).rejects.toThrow("Invalid credentials");
         });
     });
 });
