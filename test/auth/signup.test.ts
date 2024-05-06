@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
-import { AuthService } from '../src/auth/auth.service';
+import { AuthService } from '../../src/auth/auth.service';
 import * as bcrypt from 'bcrypt';
-import { AuthController } from '../src/auth/auth.controller';
-import { PrismaService } from '../src/prisma/prisma.service';
-import { AuthDto } from '../src/auth/dto';
-import { PrismaModule } from '../src/prisma/prisma.module';
+import { AuthController } from '../../src/auth/auth.controller';
+import { PrismaService } from '../../src/prisma/prisma.service';
+import { AuthDto } from '../../src/auth/dto';
+import { PrismaModule } from '../../src/prisma/prisma.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { User } from '@prisma/client';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -42,6 +42,8 @@ describe('AuthController', () => {
         ...dto,
         password: mockedHashedPassword, // Include the hashed password in the created user object
         id: 1, // Mocked user ID
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       jest.spyOn(authService, 'signup').mockResolvedValueOnce(mockedCreatedUser);
@@ -70,7 +72,7 @@ describe('AuthController', () => {
         id: 1,
       };
     
-      jest.spyOn(prismaService.user, 'findUnique').mockResolvedValueOnce(existingUser);
+      jest.spyOn(prismaService.user, 'findUnique').mockResolvedValueOnce(existingUser as User);
     
       await expect(authService.signup(dto)).rejects.toThrowError("User already exists");
     });
