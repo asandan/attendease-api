@@ -11,6 +11,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 describe('AuthController', () => {
   let controller: AuthController;
   let authService: AuthService;
+  let prismaService: PrismaService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -21,12 +22,13 @@ describe('AuthController', () => {
 
     controller = module.get<AuthController>(AuthController);
     authService = module.get<AuthService>(AuthService);
+    prismaService = module.get<PrismaService>(PrismaService);
   });
 
   describe('signup', () => {
     it('should successfully create a new user', async () => {
-      const mockedData: AuthDto = {
-        email: 'test@example.com',
+      const dto: AuthDto = {
+        email: 'test@email.com',
         password: 'password',
         name: 'John',
         surname: 'Doe',
@@ -34,21 +36,71 @@ describe('AuthController', () => {
         groupId: 1,
       };
 
-      const mockedHashedPassword = await bcrypt.hash(mockedData.password, 10);
+      const mockedHashedPassword = await bcrypt.hash(dto.password, 10);
 
       const mockedCreatedUser = {
-        ...mockedData,
+        ...dto,
         password: mockedHashedPassword, // Include the hashed password in the created user object
         id: 1, // Mocked user ID
       };
 
-      jest
-        .spyOn(authService, 'signup')
-        .mockResolvedValueOnce(mockedCreatedUser);
+      jest.spyOn(authService, 'signup').mockResolvedValueOnce(mockedCreatedUser);
 
-      const result = await controller.signup(mockedData);
+      const result = await controller.signup(dto);
 
       expect(result).toEqual(mockedCreatedUser);
+
     });
-  });
+
+    it('should throw a ForbiddenException if the user already exists', async () => {
+      const dto: AuthDto = {
+        email: 'test@email.com',
+        password: 'password',
+        name: 'John',
+        surname: 'Doe',
+        roleId: 1,
+        groupId: 1,
+      };
+    
+      const hashedPassword = await bcrypt.hash(dto.password, 10);
+    
+      const existingUser = {
+        ...dto,
+        password: hashedPassword,
+        id: 1,
+      };
+    
+      jest.spyOn(prismaService.user, 'findUnique').mockResolvedValueOnce(existingUser);
+    
+      await expect(authService.signup(dto)).rejects.toThrowError("User already exists");
+    });
+    });
+      describe('signin', () => {
+        it("should throw a ForbiddenException if the user doesn't exist", async () => {
+          const dto: AuthDto = {
+            email: 'test1@email.com',
+            password: 'password',
+            name: 'John',
+            surname: 'Doe',
+            roleId: 1,
+            groupId: 1
+          };
+        
+          // Attempt to sign in with the non-existent user
+          await expect(authService.signin(dto)).rejects.toThrowError("ForbiddenException: User doesn't exist");
+        });
+        it("should throw a ForbiddenException if the invalid credentials", async () => {
+          const dto: AuthDto = {
+            email: 'test@email.com',
+            password: 'password123',
+            name: 'John',
+            surname: 'Doe',
+            roleId: 1,
+            groupId: 1
+          };
+        
+          // Attempt to sign in with the non-existent user
+          await expect(authService.signin(dto)).rejects.toThrowError("ForbiddenException: Invalid credentials");
+        });
+    });
 });
