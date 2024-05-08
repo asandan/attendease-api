@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, Put } from "@nestjs/common";
 import { Status } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { MedicalCertificationDto } from "./dto";
+import { readFileSync } from "fs";
 
 
 @Injectable()
@@ -25,11 +26,19 @@ export class MedicalCertificationService {
       if (status) {
         filter.status = status;
       }
-      return await this.prisma.medicalCertificate.findMany({
+
+      return (await this.prisma.medicalCertificate.findMany({
         where: {
           ...filter
         }
-      });
+      })).map(certification => {
+        return {
+          ...certification,
+          picture: readFileSync(certification.path, 'base64'),
+          extension: certification.path.split('.').pop()
+        }
+      })
+
     } catch (e) {
       throw new BadRequestException(e);
     }
