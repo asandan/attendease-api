@@ -1,4 +1,4 @@
-import { Months } from "./types";
+import { Months } from "./types/common";
 
 export const SECOND = 1000;
 export const MINUTE = SECOND * 60;
