@@ -11,7 +11,7 @@ import { extname } from "path";
 @Controller("medical-certification")
 export class MedicalCertificationController {
   constructor(private readonly medicalCertificationService: MedicalCertificationService) { }
- 
+
   @Get("/:userId")
   async getUsersMedicalCertifications(@Param("userId", ParseIntPipe) userId: number, @Query("status") status: Status) {
     try {
