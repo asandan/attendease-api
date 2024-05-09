@@ -23,10 +23,10 @@ export class AuthService {
         password,
         ...restDto
       } as User;
-
       if (groupId) {
         payload.groupId = groupId;
       }
+      console.log(payload)
 
       try {
         return await this.prisma.user.create({

@@ -5,6 +5,7 @@ import { MedicalCertificationDto } from "./dto";
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
+import { extname } from "path";
 
 
 @Controller("medical-certification")
@@ -33,9 +34,9 @@ export class MedicalCertificationController {
   @UseInterceptors(FileInterceptor('image', {
     storage: diskStorage({
       destination: './storage/medical-certifications/',
-      filename: (_, __, callback) => {
+      filename: (_, file, callback) => {
         const randomName = uuidv4();
-        return callback(null, randomName);
+        return callback(null, `${randomName}${extname(file.originalname)}`);
       }
     })
   }))
