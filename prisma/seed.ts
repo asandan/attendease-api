@@ -1,4 +1,5 @@
 import {
+  ATTENDANCE_SNAPSHOT_ITEMS,
   EP_ITEMS,
   FACULTY_ITEMS,
   GROUP_ITEMS,
@@ -6,7 +7,7 @@ import {
   SUBJECT_ITEMS,
   USER_ITEMS,
 } from './data/payloads/index';
-import { EP, Faculty, Group, PrismaClient, Role, Subject, User } from '@prisma/client';
+import { AttendanceSnapshot, EP, Faculty, Group, PrismaClient, Role, Subject, User } from '@prisma/client';
 import addItems from './data/addItems';
 import addSchedule from './data/addSchedule';
 
@@ -29,6 +30,8 @@ async function main() {
     console.log('Subject seeding finished.')
     await addSchedule(prisma);
     console.log('Schedule seeding finished.')
+    await addItems<AttendanceSnapshot>(prisma, ATTENDANCE_SNAPSHOT_ITEMS, "attendanceSnapshot")
+    console.log('AttendanceSnapshot seeding finished.')
   } catch (e) {
     throw new Error(`Error while seeding data: ${e}`);
   }

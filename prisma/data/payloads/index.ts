@@ -1,3 +1,4 @@
+import { AttendanceSnapshot, User } from "@prisma/client";
 
 export const GROUP_ITEMS = [
   {
@@ -78,7 +79,7 @@ export const EP_ITEMS = [
 
 export const ROLE_ITEMS = [{ name: 'user' }, { name: 'admin' }];
 
-export const USER_ITEMS = [
+export const USER_ITEMS: Omit<User, "id" | "createdAt" | "updatedAt">[] = [
   {
     name: 'Alice',
     surname: 'Smith',
@@ -97,9 +98,47 @@ export const USER_ITEMS = [
   },
 ];
 
-// export const ATTENDANCE_SNAPSHOTS = [
-//   {
-//     day: "MONDAY",
-//     time: ""
-//   }
-// ]
+export const ATTENDANCE_SNAPSHOT_ITEMS: Omit<AttendanceSnapshot, "id" | "createdAt" | "updatedAt">[] = [
+  {
+    day: "MONDAY",
+    time: "17:00",
+    subjectId: 4,
+    userId: 1,
+    weekId: 1,
+  },
+  {
+    day: "TUESDAY",
+    time: "16:00",
+    subjectId: 5,
+    userId: 1,
+    weekId: 1,
+  },
+  {
+    day: "WEDNESDAY",
+    time: "11:00",
+    subjectId: 2,
+    userId: 1,
+    weekId: 1,
+  },
+  {
+    day: "THURSDAY",
+    time: "16:00",
+    subjectId: 8,
+    userId: 1,
+    weekId: 1,
+  },
+  {
+    day: "FRIDAY",
+    time: "13:00",
+    subjectId: 1,
+    userId: 1,
+    weekId: 1,
+  },
+  {
+    day: "SATURDAY",
+    time: "15:00",
+    subjectId: 6,
+    userId: 1,
+    weekId: 1,
+  },
+]
