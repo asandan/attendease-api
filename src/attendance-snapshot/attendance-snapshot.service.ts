@@ -18,13 +18,13 @@ export class AttendanceSnapshotService {
   async getWeekAttendanceSnapshots(data: GetWeekAttendanceSnapshotDto) {
     const { userId, currentWeek } = data;
     try {
-      const user = await this.prismaService.user.findUnique({
+      const student = await this.prismaService.student.findUnique({
         where: {
           id: userId
         }
       });
 
-      if (!user) throw new BadRequestException('User not found');
+      if (!student) throw new BadRequestException('User not found');
 
 
       const attendanceSnapshots = await this.prismaService.attendanceSnapshot.findMany({
@@ -42,7 +42,7 @@ export class AttendanceSnapshotService {
 
       const schedule = await this.prismaService.schedule.findFirst({
         where: {
-          groupId: user.groupId,
+          groupId: student.groupId,
         }
       })
 

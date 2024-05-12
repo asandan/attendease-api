@@ -1,5 +1,5 @@
 import { CommonQuery } from "src/util/types";
 
-export class SubjectQuery extends CommonQuery {
+export class TeacherQuery extends CommonQuery {
   name: string;
 }

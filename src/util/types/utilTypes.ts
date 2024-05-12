@@ -1,0 +1,1 @@
+export type RemoveDefaultFields<T> = Omit<T, "id" | "createdAt" | "updatedAt">

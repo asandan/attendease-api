@@ -5,6 +5,9 @@ import { PrismaModule } from "./prisma/prisma.module";
 import { AttendanceSnapshotModule } from "./attendance-snapshot/attendance-snapshot.module";
 import { MedicalCertificationModule } from "./medical-certification/medical-certification.module";
 import { SubjectModule } from "./subject/subject.module";
+import { GroupModule } from "./group/group.module";
+import { StudentModule } from "./user/Student.module";
+import { TeacherModule } from "./teacher/teacher.module";
 
 @Module({
   imports: [
@@ -14,6 +17,9 @@ import { SubjectModule } from "./subject/subject.module";
     AttendanceSnapshotModule,
     MedicalCertificationModule,
     SubjectModule,
+    GroupModule,
+    StudentModule,
+    TeacherModule,
   ],
   controllers: [],
   providers: [],
