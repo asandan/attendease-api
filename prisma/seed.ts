@@ -1,13 +1,15 @@
 import {
+  ACCOUNT_ITEMS,
+  ADMIN_ITEMS,
   ATTENDANCE_SNAPSHOT_ITEMS,
   EP_ITEMS,
   FACULTY_ITEMS,
   GROUP_ITEMS,
-  ROLE_ITEMS,
+  STUDENT_ITEMS,
   SUBJECT_ITEMS,
-  USER_ITEMS,
+  TEACHER_ITEMS,
 } from './data/payloads/index';
-import { AttendanceSnapshot, EP, Faculty, Group, PrismaClient, Role, Subject, User } from '@prisma/client';
+import { Account, Admin, AttendanceSnapshot, EP, Faculty, Group, PrismaClient, Student, Subject, Teacher } from '@prisma/client';
 import addItems from './data/addItems';
 import addSchedule from './data/addSchedule';
 
@@ -16,22 +18,26 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Start seeding... 🌱');
   try {
-    await addItems<Role>(prisma, ROLE_ITEMS, 'role');
-    console.log('Role seeding finished.');
+    await addItems<Account>(prisma, ACCOUNT_ITEMS, 'account');
+    console.log('Account seeding finished.');
     await addItems<Faculty>(prisma, FACULTY_ITEMS, 'faculty');
     console.log('Faculty seeding finished.');
     await addItems<EP>(prisma, EP_ITEMS, 'eP');
     console.log('EP seeding finished.');
-    await addItems<Group>(prisma, GROUP_ITEMS, 'group');
-    console.log('Group seeding finished.');
-    await addItems<User>(prisma, USER_ITEMS, 'user');
-    console.log('Users seeding finished.');
     await addItems<Subject>(prisma, SUBJECT_ITEMS, 'subject');
     console.log('Subject seeding finished.')
+    await addItems<Teacher>(prisma, TEACHER_ITEMS, 'teacher');
+    console.log('Teacher seeding finished.');
+    await addItems<Group>(prisma, GROUP_ITEMS, 'group');
+    console.log('Group seeding finished.');
+    await addItems<Student>(prisma, STUDENT_ITEMS, 'student');
+    console.log('Student seeding finished.');
+    await addItems<Admin>(prisma, ADMIN_ITEMS, 'admin');
+    console.log('Admin seeding finished.');
     await addSchedule(prisma);
     console.log('Schedule seeding finished.')
-    await addItems<AttendanceSnapshot>(prisma, ATTENDANCE_SNAPSHOT_ITEMS, "attendanceSnapshot")
-    console.log('AttendanceSnapshot seeding finished.')
+    // await addItems<AttendanceSnapshot>(prisma, ATTENDANCE_SNAPSHOT_ITEMS, "attendanceSnapshot")
+    // console.log('AttendanceSnapshot seeding finished.')
   } catch (e) {
     throw new Error(`Error while seeding data: ${e}`);
   }

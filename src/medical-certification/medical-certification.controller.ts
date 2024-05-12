@@ -1,7 +1,7 @@
 import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, UploadedFile, UseInterceptors, ValidationPipe } from "@nestjs/common";
 import { MedicalCertificationService } from "./medical-certification.service";
 import { Status } from "@prisma/client";
-import { MedicalCertificationDto } from "./dto";
+import { MedicalCertificationDto, ResolveManyDto } from "./dto";
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
@@ -13,7 +13,7 @@ export class MedicalCertificationController {
   constructor(private readonly medicalCertificationService: MedicalCertificationService) { }
 
   @Get("/:userId")
-  async getUsersMedicalCertifications(@Param("userId", ParseIntPipe) userId: number, @Query("status") status: Status) {
+  async findAllByUser(@Param("userId", ParseIntPipe) userId: number, @Query("status") status: Status) {
     try {
       return await this.medicalCertificationService.getUsersMedicalCertifications(userId, status);
     } catch (e) {
@@ -21,10 +21,10 @@ export class MedicalCertificationController {
     }
   }
 
-  @Put("/:id")
-  async resolveMedicalCertification(@Param("id", ParseIntPipe) id: number, @Query("status") newStatus: Status) {
+  @Put()
+  async resolveMany(@Body() data: ResolveManyDto[]) {
     try {
-      return await this.medicalCertificationService.resolveMedicalCertification(id, newStatus);
+      return await this.medicalCertificationService.resolveMany(data);
     } catch (e) {
       throw new BadRequestException(e);
     }
@@ -42,7 +42,7 @@ export class MedicalCertificationController {
   }))
   async createMedicalCertification(@UploadedFile() image: Express.Multer.File, @Body(ValidationPipe) dto: MedicalCertificationDto) {
     try {
-      return await this.medicalCertificationService.createMedicalCertification(dto, image.path);
+      return await this.medicalCertificationService.createMedicalCertification(dto, image.path, image.originalname);
     } catch (e) {
       throw new BadRequestException(e);
     }
