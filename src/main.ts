@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
-import { BasicAuthMiddleware } from './middleware';
+import { BasicAuthMiddleware } from './common/middleware/middleware';
 import { PrismaService } from 'nestjs-prisma';
 
 const port = process.env.PORT || 4001;
