@@ -8,6 +8,7 @@ import { SubjectModule } from "./subject/subject.module";
 import { GroupModule } from "./group/group.module";
 import { StudentModule } from "./user/Student.module";
 import { TeacherModule } from "./teacher/teacher.module";
+import { SessionModule } from "nestjs-session";
 
 @Module({
   imports: [
