@@ -25,42 +25,71 @@ enum Status {
   REJECTED
 }
 
-model Role {
-  id   Int    @id @default(autoincrement())
-  name String @unique
-
-  users User[]
+enum ROLE {
+  STUDENT
+  TEACHER
+  ADMIN
 }
 
+
 model MedicalCertificate {
-  id Int @id @default(autoincrement())
-  path String @unique
-  status Status @default(PENDING)
+  id          Int    @id @default(autoincrement())
+  path        String @unique
+  status      Status @default(PENDING)
+  originalName String
   description String
 
-  userId Int
+  studentId Int
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model User {
-  id       Int     @id @default(autoincrement())
-  email    String  @unique
+model Student {
+  id   Int  @id @default(autoincrement())
+  accountId Int  @unique
+  groupId   Int?
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  group   Group?  @relation(fields: [groupId], references: [id])
+
+  MedicalCertificate MedicalCertificate[]
+  AttendanceSnapshot AttendanceSnapshot[]
+}
+
+model Admin {
+  id Int @id @default(autoincrement())
+
+  accountId Int @unique
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+model Teacher {
+  id Int @id @default(autoincrement())
+
+  accountId Int  @unique
+  subjectId Int? @unique
+
+  account Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  subject Subject? @relation(fields: [subjectId], references: [id])
+
+  groups Group[]
+}
+
+model Account {
+  id       Int    @id @default(autoincrement())
+  email    String @unique
   password String
   name     String?
   surname  String?
+  role    ROLE
 
-  roleId  Int
-  groupId Int?
-
-  role  Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  group Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
-
-  AttendanceSnapshots AttendanceSnapshot[]
-  medicalCertificates MedicalCertificate[]
+  User    Student?
+  Admin   Admin?
+  Teacher Teacher?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -84,7 +113,7 @@ model EP {
 }
 
 model Schedule {
-  id    Int    @id @default(autoincrement())
+  id      Int @id @default(autoincrement())
   groupId Int @unique
 
   group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
@@ -99,7 +128,7 @@ model Week {
 
   schedule Schedule @relation(fields: [scheduleId], references: [id])
 
-  days               Day[]
+  days                Day[]
   attendanceSnapshots AttendanceSnapshot[]
 }
 
@@ -116,46 +145,49 @@ model Day {
 model Subject {
   id   Int    @id @default(autoincrement())
   name String
-  
+
   days DaySubject[]
 
   attendanceSnapshots AttendanceSnapshot[]
+  teacher             Teacher?
 }
 
 model DaySubject {
-  id          Int      @id @default(autoincrement())
-  dayId       Int
-  subjectId   Int
-  startTime   String
- 
-  subject     Subject  @relation(fields: [subjectId], references: [id])
-  day         Day      @relation(fields: [dayId], references: [id])
+  id        Int    @id @default(autoincrement())
+  dayId     Int
+  subjectId Int
+  startTime String
+
+  subject Subject @relation(fields: [subjectId], references: [id])
+  day     Day     @relation(fields: [dayId], references: [id])
 }
 
 model Group {
-  id   Int    @id @default(autoincrement())
-  name String @unique
-  EPId Int
+  id        Int    @id @default(autoincrement())
+  name      String @unique
+  EPId      Int
+  teacherId Int?
 
-  users User[]
+  users    Student[]
   schedule Schedule?
 
-  ep EP @relation(fields: [EPId], references: [id])
+  ep      EP       @relation(fields: [EPId], references: [id])
+  teacher Teacher? @relation(fields: [teacherId], references: [id])
 }
 
 model AttendanceSnapshot {
   id Int @id @default(autoincrement())
 
-  day   WeekDays
+  day  WeekDays
   time String
 
-  weekId Int
+  weekId    Int
   subjectId Int
-  userId Int
+  userId    Int
 
-  week Week @relation(fields: [weekId], references: [id])
+  week    Week    @relation(fields: [weekId], references: [id])
   subject Subject @relation(fields: [subjectId], references: [id])
-  user   User @relation(fields: [userId], references: [id])
+  user    Student @relation(fields: [userId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

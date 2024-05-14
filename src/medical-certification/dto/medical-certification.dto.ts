@@ -1,5 +1,6 @@
+import { Status } from "@prisma/client";
 import { Transform } from "class-transformer";
-import { IsInt, IsNotEmpty, IsString } from "class-validator";
+import { IsEnum, IsInt, IsNotEmpty, IsString } from "class-validator";
 
 export class MedicalCertificationDto {
   @IsNotEmpty()
@@ -10,4 +11,14 @@ export class MedicalCertificationDto {
   @IsNotEmpty()
   @IsString()
   description: string;
+}
+
+export class ResolveManyDto {
+  @IsInt()
+  @Transform(({ value }) => parseInt(value))
+  id: number;
+
+  @IsString()
+  @IsEnum(Status)
+  status: Status;
 }

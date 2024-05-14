@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma } from '@prisma/client';
+import { RemoveDefaultFields } from 'src/util/types/utilTypes';
 
 type PrismaOption = PrismaClient<Prisma.PrismaClientOptions, never>;
 
@@ -29,7 +30,7 @@ export type Payload<Z> = Omit<Z, "id" | "createdAt" | "updatedAt">[];
  */
 const addItems = async <T>(
   prisma: PrismaClient,
-  payload: Payload<T>,
+  payload: RemoveDefaultFields<T>[],
   model: PrismaModel,
 ) => {
   await Promise.allSettled(

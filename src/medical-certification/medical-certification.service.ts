@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, Put } from "@nestjs/common";
 import { Status } from "@prisma/client";
-import { PrismaService } from "../../src/prisma/prisma.service";
-import { MedicalCertificationDto } from "./dto";
+import { PrismaService } from "src/prisma/prisma.service";
+import { MedicalCertificationDto, ResolveManyDto } from "./dto";
 import { readFileSync } from "fs";
 
 
@@ -9,24 +9,23 @@ import { readFileSync } from "fs";
 export class MedicalCertificationService {
   constructor(private readonly prisma: PrismaService) { }
 
-  async getUsersMedicalCertifications(userId: number, status: Status) {
+  async getUsersMedicalCertifications(studentId: number, status: Status) {
     try {
-      const user = await this.prisma.user.findUnique({
+      const user = await this.prisma.student.findUnique({
         where: {
-          id: userId
+          id: studentId
         }
       });
 
       if (!user) throw new BadRequestException('User not found');
 
       const filter: Record<string, any> = {
-        userId
+        studentId
       };
 
       if (status) {
         filter.status = status;
       }
-
       return (await this.prisma.medicalCertificate.findMany({
         where: {
           ...filter
@@ -44,27 +43,28 @@ export class MedicalCertificationService {
     }
   }
 
-  async resolveMedicalCertification(id: number, newStatus: Status) {
+  async resolveMany(data: ResolveManyDto[]) {
     try {
-      if (!(newStatus in Status)) throw new BadRequestException('Invalid status');
+      if (!(data.some((el) => el.status in Status))) throw new BadRequestException('Invalid status');
 
-      return await this.prisma.medicalCertificate.update({
+      return await Promise.all(data.map(async ({ id, status }) => await this.prisma.medicalCertificate.update({
         where: {
           id
         },
         data: {
-          status: newStatus
+          status
         }
-      });
+      })
+      ))
     } catch (e) {
       throw new BadRequestException(e);
     }
   }
 
-  async createMedicalCertification(data: MedicalCertificationDto, path: string) {
+  async createMedicalCertification(data: MedicalCertificationDto, path: string, originalName: string) {
     try {
       const { userId, description } = data;
-      const user = await this.prisma.user.findUnique({
+      const user = await this.prisma.student.findUnique({
         where: {
           id: userId
         }
@@ -74,9 +74,10 @@ export class MedicalCertificationService {
 
       return await this.prisma.medicalCertificate.create({
         data: {
-          userId,
+          studentId: userId,
           description,
-          path
+          path,
+          originalName,
         }
       });
     } catch (e) {

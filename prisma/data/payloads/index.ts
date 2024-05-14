@@ -1,25 +1,30 @@
-import { AttendanceSnapshot, User } from "@prisma/client";
+import { Account, Admin, AttendanceSnapshot, EP, Faculty, Group, ROLE, Student, Subject, Teacher } from "@prisma/client";
+import { RemoveDefaultFields } from "src/util/types/utilTypes";
 
-export const GROUP_ITEMS = [
+export const GROUP_ITEMS: RemoveDefaultFields<Group>[] = [
   {
     name: 'SIS-2201',
+    teacherId: 1,
     EPId: 1,
   },
   {
     name: 'SIS-2202',
+    teacherId: 1,
     EPId: 2,
   },
   {
     name: "IS-2201",
+    teacherId: 1,
     EPId: 3,
   },
   {
     name: "IT-2202",
+    teacherId: 1,
     EPId: 4,
   }
 ];
 
-export const SUBJECT_ITEMS = [
+export const SUBJECT_ITEMS: RemoveDefaultFields<Subject>[] = [
   {
     name: 'Math',
   },
@@ -49,7 +54,7 @@ export const SUBJECT_ITEMS = [
   }
 ];
 
-export const FACULTY_ITEMS = [
+export const FACULTY_ITEMS: RemoveDefaultFields<Faculty>[] = [
   {
     name: 'Cyber Security',
   },
@@ -58,7 +63,7 @@ export const FACULTY_ITEMS = [
   }
 ];
 
-export const EP_ITEMS = [
+export const EP_ITEMS: RemoveDefaultFields<EP>[] = [
   {
     name: 'Computer Security',
     facultyId: 1,
@@ -77,28 +82,52 @@ export const EP_ITEMS = [
   }
 ];
 
-export const ROLE_ITEMS = [{ name: 'user' }, { name: 'admin' }];
 
-export const USER_ITEMS: Omit<User, "id" | "createdAt" | "updatedAt">[] = [
+export const ACCOUNT_ITEMS: RemoveDefaultFields<Account>[] = [
   {
     name: 'Alice',
     surname: 'Smith',
     email: 'alice.smith@gmail.com',
     password: '123',
-    roleId: 1,
-    groupId: 1,
+    role: ROLE.ADMIN,
   },
   {
     name: 'John',
     surname: 'Doe',
     email: 'john.doe@gmail.com',
     password: 'qwe',
-    roleId: 2,
-    groupId: 1,
+    role: ROLE.TEACHER,
+  },
+  {
+    name: 'Admin',
+    surname: 'Admin',
+    email: 'admin@gmail.com',
+    password: 'qwe',
+    role: ROLE.STUDENT,
   },
 ];
 
-export const ATTENDANCE_SNAPSHOT_ITEMS: Omit<AttendanceSnapshot, "id" | "createdAt" | "updatedAt">[] = [
+export const ADMIN_ITEMS: RemoveDefaultFields<Admin>[] = [
+  {
+    accountId: 1,
+  }
+];
+
+export const TEACHER_ITEMS: RemoveDefaultFields<Teacher>[] = [
+  {
+    accountId: 2,
+    subjectId: 1,
+  }
+];
+
+export const STUDENT_ITEMS: RemoveDefaultFields<Student>[] = [
+  {
+    accountId: 3,
+    groupId: 1,
+  }
+]
+
+export const ATTENDANCE_SNAPSHOT_ITEMS: RemoveDefaultFields<AttendanceSnapshot>[] = [
   {
     day: "MONDAY",
     time: "17:00",

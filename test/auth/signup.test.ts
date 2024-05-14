@@ -33,7 +33,7 @@ describe('AuthController', () => {
         name: 'John',
         surname: 'Doe',
         roleId: 1,
-        groupId: 1
+        groupId: 1,
       };
 
       const mockedHashedPassword = await bcrypt.hash(dto.password, 10);
