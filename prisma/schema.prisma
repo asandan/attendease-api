@@ -31,13 +31,14 @@ enum ROLE {
   ADMIN
 }
 
-
 model MedicalCertificate {
-  id          Int    @id @default(autoincrement())
-  path        String @unique
-  status      Status @default(PENDING)
+  id           Int      @id @default(autoincrement())
+  path         String   @unique
+  status       Status   @default(PENDING)
   originalName String
-  description String
+  description  String
+  startDate    DateTime @default(now())
+  endDate      DateTime @default(now())
 
   studentId Int
 
@@ -48,7 +49,7 @@ model MedicalCertificate {
 }
 
 model Student {
-  id   Int  @id @default(autoincrement())
+  id        Int  @id @default(autoincrement())
   accountId Int  @unique
   groupId   Int?
 
@@ -80,12 +81,12 @@ model Teacher {
 }
 
 model Account {
-  id       Int    @id @default(autoincrement())
-  email    String @unique
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
   password String
   name     String?
   surname  String?
-  role    ROLE
+  role     ROLE
 
   User    Student?
   Admin   Admin?

@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateAttendanceSnapshotDto, GetWeekAttendanceSnapshotDto } from "./dto";
-import { getFullWeekDay, getWeeksPassed } from "src/util";
+import { getFullWeekDay, getWeeksPassed, SECOND_SEMESTER_START_DATE } from "src/util";
 
 @Injectable({})
 export class AttendanceSnapshotService {
@@ -23,7 +23,6 @@ export class AttendanceSnapshotService {
           id: userId
         }
       });
-
       if (!student) throw new BadRequestException('User not found');
 
 
@@ -108,7 +107,7 @@ export class AttendanceSnapshotService {
       const currentHour = today.getHours();
       const currentMinute = today.getMinutes();
       const currentDay = getFullWeekDay(today.getDay());
-      const currentWeek = getWeeksPassed(new Date("January 23, 2024"))
+      const currentWeek = getWeeksPassed(new Date())
 
       if (currentHour > 18 || currentHour < 8) {
         throw new BadRequestException("Cannot create attendance snapshot")

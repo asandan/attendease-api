@@ -1,6 +1,6 @@
 import { Status } from "@prisma/client";
 import { Transform } from "class-transformer";
-import { IsEnum, IsInt, IsNotEmpty, IsString } from "class-validator";
+import { IsDate, IsEnum, IsInt, IsNotEmpty, IsString } from "class-validator";
 
 export class MedicalCertificationDto {
   @IsNotEmpty()
@@ -11,6 +11,14 @@ export class MedicalCertificationDto {
   @IsNotEmpty()
   @IsString()
   description: string;
+
+  @IsNotEmpty()
+  @IsDate()
+  startDate: Date;
+  
+  @IsNotEmpty()
+  @IsDate()
+  endDate: Date;
 }
 
 export class ResolveManyDto {

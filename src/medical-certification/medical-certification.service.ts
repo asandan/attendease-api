@@ -3,6 +3,7 @@ import { Status } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { MedicalCertificationDto, ResolveManyDto } from "./dto";
 import { readFileSync } from "fs";
+import { getWeeksPassed } from "src/util";
 
 
 @Injectable()
@@ -45,16 +46,102 @@ export class MedicalCertificationService {
 
   async resolveMany(data: ResolveManyDto[]) {
     try {
-      if (!(data.some((el) => el.status in Status))) throw new BadRequestException('Invalid status');
-
-      return await Promise.all(data.map(async ({ id, status }) => await this.prisma.medicalCertificate.update({
+      const medicalCertifications = await this.prisma.medicalCertificate.findMany({
         where: {
-          id
+          id: {
+            in: data.map(({ id }) => id)
+          },
         },
-        data: {
-          status
+        select: {
+          startDate: true,
+          endDate: true,
+          studentId: true,
+        }
+      });
+
+      const studentId = medicalCertifications[0].studentId;
+
+      const { id: groupId } = await this.prisma.student.findUnique({
+        where: {
+          id: studentId
+        }
+      }).group();
+
+      if (!groupId) throw new BadRequestException('Group not found');
+
+      const schedule = await this.prisma.schedule.findFirst({
+        where: {
+          groupId
+        }
+      });
+
+      if (!schedule) throw new BadRequestException('Schedule not found');
+
+      const weeks = await Promise.all(medicalCertifications.map(async ({ startDate, endDate }) => {
+        const gte = getWeeksPassed(startDate);
+        const lte = getWeeksPassed(endDate);
+        return await this.prisma.week.findMany({
+          where: {
+            number: {
+              gte,
+              lte
+            }
+          },
+          select: {
+            id: true,
+          }
+        })
+      }
+      ));
+
+      const subjects = await this.prisma.daySubject.findMany({
+        where: {
+          day: {
+            weekId: {
+              in: weeks.flat().map(({ id }) => id)
+            }
+          }
+        },
+        select: {
+          subject: {
+            select: {
+              id: true,
+            }
+          },
+          day: {
+            select: {
+              name: true,
+              weekId: true,
+            },
+          },
+          startTime: true,
         }
       })
+
+      await Promise.all(data.map(async ({ status }) => {
+        if (status === Status.APPROVED) {
+          await this.prisma.attendanceSnapshot.createMany({
+            data: subjects.map(({ day, subject, startTime }) => ({
+              weekId: day.weekId,
+              subjectId: subject.id,
+              time: startTime,
+              day: day.name,
+              userId: studentId
+            }))
+          })
+        }
+      }))
+
+
+      return await Promise.all(data.map(
+        async ({ id, status }) => await this.prisma.medicalCertificate.update({
+          where: {
+            id
+          },
+          data: {
+            status
+          }
+        })
       ))
     } catch (e) {
       throw new BadRequestException(e);
@@ -63,7 +150,7 @@ export class MedicalCertificationService {
 
   async createMedicalCertification(data: MedicalCertificationDto, path: string, originalName: string) {
     try {
-      const { userId, description } = data;
+      const { userId, description, ...otherData } = data;
       const user = await this.prisma.student.findUnique({
         where: {
           id: userId
@@ -78,6 +165,7 @@ export class MedicalCertificationService {
           description,
           path,
           originalName,
+          ...otherData
         }
       });
     } catch (e) {
