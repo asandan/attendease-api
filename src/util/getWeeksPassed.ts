@@ -5,8 +5,8 @@ export const getWeeksPassed = (endDate: Date): number => {
   const weeksPassedSinceDate = Math.ceil(timeDiff / (DAY * 7));
 
   console.log(endDate, weeksPassedSinceDate)
-
-  // if (weeksPassedSinceDate < 0 || weeksPassedSinceDate > 15) throw new Error('Week is out of semester range');
+  
+  if (weeksPassedSinceDate < 0 || weeksPassedSinceDate > 15) throw new Error('Week is out of semester range');
 
   return weeksPassedSinceDate;
 }

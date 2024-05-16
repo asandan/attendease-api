@@ -23,8 +23,8 @@ export class AttendanceSnapshotService {
           id: userId
         }
       });
-      if (!student) throw new BadRequestException('User not found');
 
+      if (!student) throw new BadRequestException('User not found');
 
       const attendanceSnapshots = await this.prismaService.attendanceSnapshot.findMany({
         where: {
