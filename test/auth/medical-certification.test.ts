@@ -9,7 +9,6 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaModule } from 'nestjs-prisma';
 import { MedicalCertificationController } from '../../src/medical-certification/medical-certification.controller';
 import * as fs from 'fs';
-import { devNull } from 'os';
 
 describe('MedicalCertificationService', () => {
 
@@ -75,14 +74,14 @@ controllers: [MedicalCertificationController],
         expect(result[0].extension).toBeDefined();
       });
   
-      /*it('should throw BadRequestException if user not found', async () => {
+      it('should throw BadRequestException if user not found', async () => {
         const studentId = 1;
-        const status = Status.PENDING;
-        jest.spyOn(prismaService.account, 'findUnique').mockResolvedValue(null);
+        const status = Status.APPROVED;
+        jest.spyOn(prismaService.account, 'findUnique').mockResolvedValueOnce(null);
     
         await expect(service.getUsersMedicalCertifications(studentId, status)).rejects.toThrow(BadRequestException);
-      });
-      */
+    });
+    
     
   });
 

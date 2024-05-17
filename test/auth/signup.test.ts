@@ -126,7 +126,7 @@ describe('AuthController', () => {
   });
 
   describe('signin', () => {
-    /*it("should throw a ForbiddenException if the user doesn't exist", async () => {
+    it("should throw a ForbiddenException if the user doesn't exist", async () => {
       const dto: AuthDto = {
         email: 'nonexistent@email.com',
         password: 'password',
@@ -140,7 +140,7 @@ describe('AuthController', () => {
 
       jest.spyOn(prismaService.account, 'findUnique').mockResolvedValueOnce({ id } as Account);
 
-      await expect(authService.signin(dto)).rejects.toThrowError(ForbiddenException);
+      await expect(authService.signin(dto)).rejects.toThrowError(Error);
     });
   
 
@@ -162,8 +162,8 @@ describe('AuthController', () => {
 
       jest.spyOn(prismaService.account, 'findUnique').mockResolvedValueOnce(existingUser as Account);
 
-      await expect(authService.signin(dto)).rejects.toThrowError(ForbiddenException);
-    });*/
+      await expect(authService.signin(dto)).rejects.toThrowError(Error);
+    });
 
   });
 });

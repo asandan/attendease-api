@@ -1,8 +1,9 @@
 import { BadRequestException, Injectable, Put } from "@nestjs/common";
 import { Status } from "@prisma/client";
-import { PrismaService } from "src/prisma/prisma.service";
+import { PrismaService } from "../prisma/prisma.service";
 import { MedicalCertificationDto, ResolveManyDto } from "./dto";
 import { readFileSync } from "fs";
+
 
 
 @Injectable()
