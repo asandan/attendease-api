@@ -1,4 +1,4 @@
-import { PrismaClient, Schedule, WeekDays } from "@prisma/client";
+import { PrismaClient, Week, WeekDays } from "@prisma/client";
 
 const addSchedule = async (prisma: PrismaClient) => {
   const startTimes = [
@@ -16,34 +16,65 @@ const addSchedule = async (prisma: PrismaClient) => {
   ];
 
   const subjectData = await prisma.subject.findMany();
+  const groups = await prisma.group.findMany();
 
-  const totalGroups = await prisma.group.count();
-
-  const schedule = await prisma.schedule.create({
-    data: { groupId: Math.floor(Math.random() * totalGroups) + 1 },
-  });
-
-  for (let i = 1; i <= 15; i++) {
-    await prisma.week.create({
-      data: {
-        number: i,
-        scheduleId: schedule.id,
-        days: {
-          create: Object.values(WeekDays).map((weekday) => ({
-            name: weekday,
-            subjects: {
-              create: {
-                subjectId: subjectData[Math.floor(Math.random() * subjectData.length)].id,
-                startTime:
-                  startTimes[Math.floor(Math.random() * startTimes.length)]
-                ,
-              },
-            },
-          })),
-        },
-      },
+  for (const group of groups) {
+    await prisma.schedule.create({
+      data: { groupId: group.id },
     });
   }
-}
+
+  const schedules = await prisma.schedule.findMany();
+
+  const getRandomScheduleForDay = () => {
+    const subjectsPerDay = Math.floor(Math.random() * 5 + 1);
+    return Array.from({ length: subjectsPerDay }, () => ({
+      subjectId: subjectData[Math.floor(Math.random() * subjectData.length)].id,
+      startTime: startTimes[Math.floor(Math.random() * startTimes.length)],
+    }));
+  };
+
+  const scheduleForWeek: ReturnType<typeof getRandomScheduleForDay>[] = [];
+
+  for (let i = 0; i < 6; i++) {
+    scheduleForWeek.push(getRandomScheduleForDay());
+  }
+
+  for (const schedule of schedules) {
+    const weeks: Week[] = [];
+
+    for (let i = 0; i < 15; i++) {
+      const week = await prisma.week.create({
+        data: {
+          number: i + 1,
+          scheduleId: schedule.id,
+          days: {
+            create: Object.values(WeekDays).map((weekday) => ({
+              name: weekday,
+            })),
+          },
+        },
+      });
+      weeks.push(week);
+    }
+
+    for (const week of weeks) {
+      const days = await prisma.day.findMany({
+        where: { weekId: week.id },
+        select: { id: true, name: true },
+      });
+
+      for (let i = 0; i < days.length; i++) {
+        await prisma.daySubject.createMany({
+          data: scheduleForWeek[i].map((subject) => ({
+            dayId: days[i].id,
+            subjectId: subject.subjectId,
+            startTime: subject.startTime,
+          })),
+        });
+      }
+    }
+  }
+};
 
 export default addSchedule;

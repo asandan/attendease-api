@@ -12,6 +12,7 @@ import {
 import { Account, Admin, AttendanceSnapshot, EP, Faculty, Group, PrismaClient, Student, Subject, Teacher } from '@prisma/client';
 import addItems from './data/addItems';
 import addSchedule from './data/addSchedule';
+import { addAttendanceSnapshots } from './data/addAttendanceSnapshots';
 
 const prisma = new PrismaClient();
 
@@ -36,8 +37,8 @@ async function main() {
     console.log('Admin seeding finished.');
     await addSchedule(prisma);
     console.log('Schedule seeding finished.')
-    // await addItems<AttendanceSnapshot>(prisma, ATTENDANCE_SNAPSHOT_ITEMS, "attendanceSnapshot")
-    // console.log('AttendanceSnapshot seeding finished.')
+    await addAttendanceSnapshots(prisma);
+    console.log('AttendanceSnapshot seeding finished.')
   } catch (e) {
     throw new Error(`Error while seeding data: ${e}`);
   }

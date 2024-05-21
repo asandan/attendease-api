@@ -30,7 +30,7 @@ export class AttendanceSnapshotService {
         where: {
           userId,
           week: {
-            id: currentWeek
+            number: currentWeek
           }
         },
         select: {
@@ -87,7 +87,6 @@ export class AttendanceSnapshotService {
         };
         Object.entries(attendance).forEach(([day, attended]) => {
           const totalSubjectsOnDay = currentWeekSnapshot.days.filter(d => d.name === day)[0]?.subjects.filter(s => s.subject.name === subject).length || 0;
-          console.log(totalSubjectsOnDay, attended)
           subjectAttendance[day] = totalSubjectsOnDay !== 0 ? attended / totalSubjectsOnDay : 0;
         });
         return subjectAttendance;

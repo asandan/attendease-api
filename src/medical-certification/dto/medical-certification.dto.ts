@@ -13,12 +13,12 @@ export class MedicalCertificationDto {
   description: string;
 
   @IsNotEmpty()
-  @IsDate()
-  startDate: Date;
+  @IsString()
+  startDate: string;
   
   @IsNotEmpty()
-  @IsDate()
-  endDate: Date;
+  @IsString()
+  endDate: string;
 }
 
 export class ResolveManyDto {

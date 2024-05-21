@@ -78,8 +78,7 @@ export class MedicalCertificationService {
       if (!schedule) throw new BadRequestException('Schedule not found');
 
       const weeks = await Promise.all(medicalCertifications.map(async ({ startDate, endDate }) => {
-        const gte = getWeeksPassed(startDate);
-        const lte = getWeeksPassed(endDate);
+        const [gte, lte] = [getWeeksPassed(startDate), getWeeksPassed(endDate)]
         return await this.prisma.week.findMany({
           where: {
             number: {
@@ -99,7 +98,11 @@ export class MedicalCertificationService {
           day: {
             weekId: {
               in: weeks.flat().map(({ id }) => id)
+            },
+            week: {
+              scheduleId: schedule.id
             }
+
           }
         },
         select: {
@@ -110,6 +113,7 @@ export class MedicalCertificationService {
           },
           day: {
             select: {
+              id: true,
               name: true,
               weekId: true,
             },
@@ -120,15 +124,35 @@ export class MedicalCertificationService {
 
       await Promise.all(data.map(async ({ status }) => {
         if (status === Status.APPROVED) {
-          await this.prisma.attendanceSnapshot.createMany({
-            data: subjects.map(({ day, subject, startTime }) => ({
-              weekId: day.weekId,
-              subjectId: subject.id,
-              time: startTime,
-              day: day.name,
-              userId: studentId
-            }))
-          })
+          return (await Promise.all(subjects.map(async ({ day, subject, startTime }) => {
+            const attendanceSnapshotCount = await this.prisma.attendanceSnapshot.count({
+              where: {
+                userId: studentId,
+                subjectId: subject.id,
+                day: day.name,
+                weekId: day.weekId,
+              }
+            });
+
+            const filteredSubjects = subjects.filter(({ day: { id: dayId }, subject: { id: subjectId } }) =>
+              dayId === day.id && subject.id === subjectId
+            )
+
+            if (attendanceSnapshotCount / filteredSubjects.length !== 1) {
+              const data = Array.from({ length: filteredSubjects.length - attendanceSnapshotCount }).map(_ => ({
+                weekId: day.weekId,
+                subjectId: subject.id,
+                time: startTime,
+                day: day.name,
+                userId: studentId
+              })
+              )
+
+              return this.prisma.attendanceSnapshot.createMany({
+                data
+              })
+            }
+          })))
         }
       }))
 
@@ -150,7 +174,7 @@ export class MedicalCertificationService {
 
   async createMedicalCertification(data: MedicalCertificationDto, path: string, originalName: string) {
     try {
-      const { userId, description, ...otherData } = data;
+      const { userId, ...otherData } = data;
       const user = await this.prisma.student.findUnique({
         where: {
           id: userId
@@ -162,7 +186,6 @@ export class MedicalCertificationService {
       return await this.prisma.medicalCertificate.create({
         data: {
           studentId: userId,
-          description,
           path,
           originalName,
           ...otherData

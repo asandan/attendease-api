@@ -6,7 +6,7 @@ import { AttendanceSnapshotModule } from "./attendance-snapshot/attendance-snaps
 import { MedicalCertificationModule } from "./medical-certification/medical-certification.module";
 import { SubjectModule } from "./subject/subject.module";
 import { GroupModule } from "./group/group.module";
-import { StudentModule } from "./user/Student.module";
+import { StudentModule } from "./student/Student.module";
 import { TeacherModule } from "./teacher/teacher.module";
 
 @Module({
