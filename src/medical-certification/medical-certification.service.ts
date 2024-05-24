@@ -18,7 +18,9 @@ export class MedicalCertificationService {
         }
       });
 
-      if (!user) throw new BadRequestException('User not found');
+      if (!user) {
+        console.log('User not found, throwing BadRequestException');
+        throw new BadRequestException('User not found')};
 
       const filter: Record<string, any> = {
         studentId
@@ -38,7 +40,6 @@ export class MedicalCertificationService {
           extension: certification.path.split('.').pop()
         }
       })
-
     } catch (e) {
       throw new BadRequestException(e);
     }

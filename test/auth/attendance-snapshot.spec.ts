@@ -79,14 +79,14 @@ describe('AttendanceSnapshotService', () => {
                 { subject: 'Math', Monday: 1, Tuesday: 0 },
                 { subject: 'English', Monday: 0, Tuesday: 1 },
             ];
-
+    
             jest.spyOn(prismaService.student, 'findUnique').mockResolvedValue(student);
             jest.spyOn(prismaService.attendanceSnapshot, 'findMany').mockResolvedValue(snapshots);
             jest.spyOn(prismaService.schedule, 'findFirst').mockResolvedValue(schedule);
             jest.spyOn(prismaService.week, 'findFirstOrThrow').mockResolvedValue(currentWeekSnapshot);
-
+    
             const result = await service.getWeekAttendanceSnapshots({ userId, currentWeek });
-
+    
             expect(result).toEqual(expectedAttendanceData);
         });
 
@@ -113,8 +113,8 @@ describe('AttendanceSnapshotService', () => {
             const data: CreateAttendanceSnapshotDto = { userId, subjectId: 1 };
             const today = new Date();
             jest.spyOn(global, 'Date').mockImplementation(() => today);
-            const currentHour = today.getHours();
-            const currentDay = getFullWeekDay(today.getDay()) as WeekDays;
+            const currentHour = today.getUTCHours();
+            const currentDay = getFullWeekDay(today.getUTCDay()) as WeekDays;
             const currentWeek = getWeeksPassed(new Date('January 23, 2024'));
             const time = `${currentHour}:00`;
             const weekId = 1;
@@ -129,17 +129,15 @@ describe('AttendanceSnapshotService', () => {
                 createdAt: today,
                 updatedAt: today,
             };
-
+    
             jest.spyOn(prismaService.week, 'findFirst').mockResolvedValue({ id: weekId, scheduleId: 1, number: currentWeek });
-            jest.spyOn(prismaService.daySubject, 'findFirst').mockResolvedValue({ id: subjectId, dayId: 1, subjectId: 2, startTime: '08:00' });
-
+            jest.spyOn(prismaService.daySubject, 'findFirst').mockResolvedValue({ id: subjectId, dayId: 1, subjectId: 2, startTime: `${currentHour}:00` });
             jest.spyOn(prismaService.attendanceSnapshot, 'create').mockResolvedValue(payload);
-
+    
             const result = await service.createSnapshot(data);
-
+    
             expect(result).toEqual(payload);
         });
-
 
         it('should throw BadRequestException if it is not between 8:00 and 18:00', async () => {
             const userId = 1;

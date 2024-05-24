@@ -110,7 +110,7 @@
         const currentDay = getFullWeekDay(today.getDay());
         const currentWeek = getWeeksPassed(new Date("January 23, 2024"))
 
-        if (currentHour > 18 || currentHour < 8) {
+        if (currentHour > 18 && currentHour < 8) {
           throw new BadRequestException("Cannot create attendance snapshot")
         }
 

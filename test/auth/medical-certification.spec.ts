@@ -77,9 +77,15 @@ controllers: [MedicalCertificationController],
       it('should throw BadRequestException if user not found', async () => {
         const studentId = 1;
         const status = Status.APPROVED;
+
         jest.spyOn(prismaService.account, 'findUnique').mockResolvedValueOnce(null);
-    
-        await expect(service.getUsersMedicalCertifications(studentId, status)).rejects.toThrow(BadRequestException);
+
+        try {
+          await service.getUsersMedicalCertifications(studentId, status);
+      } catch (error) {
+          expect(error).toBeInstanceOf(BadRequestException);
+          expect(error.message).toBe('User not found');
+      }
     });
     
     
