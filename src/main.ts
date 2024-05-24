@@ -1,9 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
-import { BasicAuthMiddleware } from './middleware';
-import { PrismaService } from 'nestjs-prisma';
-import { setupCors } from './common/config/setupCors';
 
 const port = process.env.PORT || 4001;
 const globalPrefix = 'api';
