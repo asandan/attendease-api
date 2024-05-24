@@ -5,7 +5,6 @@ import { Request, Response, NextFunction } from 'express';
 export class BasicAuthMiddleware implements NestMiddleware {
   use(req: Request, _: Response, next: NextFunction): void {
     const authorization = req.headers['authorization'];
-
     if (!authorization) {
       throw new UnauthorizedException('Authorization header is missing');
     }

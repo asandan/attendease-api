@@ -8,6 +8,7 @@ import { SubjectModule } from "./subject/subject.module";
 import { GroupModule } from "./group/group.module";
 import { StudentModule } from "./student/Student.module";
 import { TeacherModule } from "./teacher/teacher.module";
+import { UserModule } from "./user/user.module";
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { TeacherModule } from "./teacher/teacher.module";
     GroupModule,
     StudentModule,
     TeacherModule,
+    UserModule
   ],
   controllers: [],
   providers: [],

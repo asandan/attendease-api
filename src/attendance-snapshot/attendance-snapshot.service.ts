@@ -107,14 +107,13 @@ export class AttendanceSnapshotService {
       const currentMinute = today.getMinutes();
       const currentDay = getFullWeekDay(today.getDay());
       const currentWeek = getWeeksPassed(new Date())
+      // if (currentHour > 18 || currentHour < 8) {
+      //   throw new BadRequestException("Cannot create attendance snapshot")
+      // }
 
-      if (currentHour > 18 || currentHour < 8) {
-        throw new BadRequestException("Cannot create attendance snapshot")
-      }
-
-      if (currentMinute > 10) {
-        throw new BadRequestException("User has been late for class")
-      }
+      // if (currentMinute > 10) {
+      //   throw new BadRequestException("User has been late for class")
+      // }
 
       const time = `${currentHour}:00`
 
@@ -122,16 +121,32 @@ export class AttendanceSnapshotService {
         throw new BadRequestException("Today's Sunday")
       }
 
+      const { group } = await this.prismaService.student.findFirst({
+        where: {
+          id: userId
+        },
+        select: {
+          group: true
+        }
+      })
+
+      const schedule = await this.prismaService.schedule.findFirst({
+        where: {
+          groupId: group.id
+        }
+      })
+
       const { id: weekId } = await this.prismaService.week.findFirst({
         where: {
           number: currentWeek,
+          scheduleId: schedule.id
         },
         select: {
           id: true,
         }
       })
 
-      const { subject: { id: subjectId } } = await this.prismaService.daySubject.findFirst({
+      const { subject: { id: subjectId } } = await this.prismaService.daySubject.findFirstOrThrow({
         where: {
           startTime: time
         },

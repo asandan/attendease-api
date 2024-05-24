@@ -1,8 +1,9 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { Teacher } from "@prisma/client";
 import { PrismaService } from "nestjs-prisma";
-import { CRUDService } from "src/common/CRUDService";
-import { GetUserProfileDto } from "./dto";
+import { GetUserProfileDto, UpdateUserProfileDto } from "./dto";
+import { Admin, ROLE, Student, Teacher } from "@prisma/client";
+import * as bcrypt from 'bcrypt';
+
 
 @Injectable()
 export class UserService {
@@ -11,90 +12,122 @@ export class UserService {
   async getUserProfile(data: GetUserProfileDto) {
     try {
       const { id, role } = data;
-
-      if (role === 'TEACHER') {
-        const teacher = await this.prismaService.teacher.findUnique({
+      console.log(id, role)
+      if (role === ROLE.TEACHER) {
+        console.log(id, "TEACHER")
+        const teacher = await this.prismaService.teacher.findUniqueOrThrow({
           where: {
             id
           },
           include: {
-            account: {
-              select: {
-                email: true,
-                name: true,
-                surname: true,
-              }
-            },
-            subject: {
-              select: {
-                name: true,
-              }
-            },
+            account: true,
+            subject: true,
           }
         })
-        return {
-          ...teacher.account,
-          subject: teacher.subject.name,
-        }
-      } else if (role === 'STUDENT') {
-        const student = await this.prismaService.student.findUnique({
+        console.log(teacher)
+        return teacher;
+      } else if (role === ROLE.STUDENT) {
+        const student = await this.prismaService.student.findUniqueOrThrow({
           where: {
             id
           },
-          select: {
-            account: {
-              select: {
-                email: true,
-                name: true,
-                surname: true,
-              }
-            },
+          include: {
+            account: true,
             group: {
-              select: {
+              include: {
                 ep: {
-                  select: {
-                    faculty: {
-                      select: {
-                        name: true
-                      }
-                    },
-                    name: true,
-                  },
-
-                },
-                name: true,
-              },
+                  include: {
+                    faculty: true,
+                  }
+                }
+              }
             }
-          }
+          },
         })
 
-        return {
-          ...student.account,
-          group: student.group.name,
-          faculty: student.group.ep.faculty.name,
-          ep: student.group.ep.name
-        }
+        return student;
       }
 
-      const { account } = await this.prismaService.admin.findUnique({
+      const admin = await this.prismaService.admin.findUniqueOrThrow({
         where: {
           id
         },
-        select: {
-          account: {
-            select: {
-              email: true,
-              name: true,
-              surname: true,
-            }
-          }
+        include: {
+          account: true,
+        },
+      })
+
+      return admin;
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
+  }
+
+  async updateProfile(data: UpdateUserProfileDto) {
+    try {
+      const { id, role, name, surname, password: _password, email, subjectId, groupId } = data;
+
+      const user: Teacher | Student | Admin = await this.prismaService[role.toLowerCase()].findUnique({
+        where: {
+          id
+        }
+      });
+
+      const password = bcrypt.hashSync(_password, 10);
+
+      const updatedAccount = await this.prismaService.account.update({
+        where: {
+          id: user.accountId
+        },
+        data: {
+          name,
+          surname,
+          password,
+          email,
         }
       })
 
-      return {
-        ...account
+      if (!subjectId || role === ROLE.ADMIN) return updatedAccount;
+
+      if (role === ROLE.STUDENT) {
+        const updatedStudent = await this.prismaService.student.update({
+          where: {
+            id
+          },
+          data: {
+            groupId
+          }
+        })
+
+        return { updatedStudent, updatedAccount }
       }
 
+      if (role === ROLE.TEACHER) {
+        const updatedTeacher = await this.prismaService.teacher.update({
+          where: {
+            id
+          },
+          data: {
+            subjectId
+          }
+        })
+
+        return { updatedTeacher, updatedAccount };
+      }
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
+  }
+
+  async getUsersByRole(role: ROLE) {
+    try {
+      const user = await this.prismaService[role.toLowerCase()].findMany({
+        include: {
+          account: true,
+        }
+      })
+      console.log(user)
+      return user.map(user => ({ value: user.id, label: `${user.account.name} ${user.account.surname}` }))
 
     } catch (e) {
       throw new BadRequestException(e);

@@ -7,9 +7,6 @@ export class CreateAttendanceSnapshotDto {
   @Transform(({ value }) => parseInt(value))
   userId: number;
 
-  @IsNotEmpty()
-  @Transform(({ value }) => parseInt(value))
-  subjectId: number;
 }
 
 export class GetWeekAttendanceSnapshotDto {
