@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateAttendanceSnapshotDto, GetWeekAttendanceSnapshotDto } from "./dto";
-import { getFullWeekDay, getWeeksPassed } from "src/util";
+import { getFullWeekDay, getWeeksPassed, SECOND_SEMESTER_START_DATE } from "src/util";
 
 @Injectable({})
 export class AttendanceSnapshotService {
@@ -26,12 +26,11 @@ export class AttendanceSnapshotService {
 
       if (!student) throw new BadRequestException('User not found');
 
-
       const attendanceSnapshots = await this.prismaService.attendanceSnapshot.findMany({
         where: {
           userId,
           week: {
-            id: currentWeek
+            number: currentWeek
           }
         },
         select: {
@@ -88,7 +87,6 @@ export class AttendanceSnapshotService {
         };
         Object.entries(attendance).forEach(([day, attended]) => {
           const totalSubjectsOnDay = currentWeekSnapshot.days.filter(d => d.name === day)[0]?.subjects.filter(s => s.subject.name === subject).length || 0;
-          console.log(totalSubjectsOnDay, attended)
           subjectAttendance[day] = totalSubjectsOnDay !== 0 ? attended / totalSubjectsOnDay : 0;
         });
         return subjectAttendance;
@@ -108,15 +106,14 @@ export class AttendanceSnapshotService {
       const currentHour = today.getHours();
       const currentMinute = today.getMinutes();
       const currentDay = getFullWeekDay(today.getDay());
-      const currentWeek = getWeeksPassed(new Date("January 23, 2024"))
+      const currentWeek = getWeeksPassed(new Date())
+      // if (currentHour > 18 || currentHour < 8) {
+      //   throw new BadRequestException("Cannot create attendance snapshot")
+      // }
 
-      if (currentHour > 18 || currentHour < 8) {
-        throw new BadRequestException("Cannot create attendance snapshot")
-      }
-
-      if (currentMinute > 10) {
-        throw new BadRequestException("User has been late for class")
-      }
+      // if (currentMinute > 10) {
+      //   throw new BadRequestException("User has been late for class")
+      // }
 
       const time = `${currentHour}:00`
 
@@ -124,16 +121,32 @@ export class AttendanceSnapshotService {
         throw new BadRequestException("Today's Sunday")
       }
 
+      const { group } = await this.prismaService.student.findFirst({
+        where: {
+          id: userId
+        },
+        select: {
+          group: true
+        }
+      })
+
+      const schedule = await this.prismaService.schedule.findFirst({
+        where: {
+          groupId: group.id
+        }
+      })
+
       const { id: weekId } = await this.prismaService.week.findFirst({
         where: {
           number: currentWeek,
+          scheduleId: schedule.id
         },
         select: {
           id: true,
         }
       })
 
-      const { subject: { id: subjectId } } = await this.prismaService.daySubject.findFirst({
+      const { subject: { id: subjectId } } = await this.prismaService.daySubject.findFirstOrThrow({
         where: {
           startTime: time
         },

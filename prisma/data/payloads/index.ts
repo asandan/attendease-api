@@ -105,6 +105,13 @@ export const ACCOUNT_ITEMS: RemoveDefaultFields<Account>[] = [
     password: 'qwe',
     role: ROLE.STUDENT,
   },
+  {
+    name: 'Assanali',
+    surname: 'Danybayev',
+    email: 'asandan@kenfasad.com',
+    password: '$2b$10$j13NOWMZs8v2/Qmha00jJ.cCRSSiagYTHXvk1BzieWmr4GKwvz53K',
+    role: ROLE.STUDENT,
+  },
 ];
 
 export const ADMIN_ITEMS: RemoveDefaultFields<Admin>[] = [
@@ -124,7 +131,11 @@ export const STUDENT_ITEMS: RemoveDefaultFields<Student>[] = [
   {
     accountId: 3,
     groupId: 1,
-  }
+  },
+  {
+    accountId: 4,
+    groupId: 1,
+  },
 ]
 
 export const ATTENDANCE_SNAPSHOT_ITEMS: RemoveDefaultFields<AttendanceSnapshot>[] = [

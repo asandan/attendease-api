@@ -15,13 +15,15 @@ export class GroupController {
     @Res() res: Response,
   ): Promise<Response<Group[]>> {
     try {
-      const { skip, take, sort, ...where } = query;
+      const { skip, take, sort, teacherId } = query;
       return res.json(
         await this.groupService.findAll({
           skip,
           take,
           sort,
-          where,
+          where: {
+            teacherId
+          }
         }),
       );
     } catch (e) {
